@@ -34,18 +34,18 @@ let isGenerating = false;
 let abortController = null;
 
 let currentModel = 'gpt-4o-mini';
-let currentProvider = 'openai'; 
+let currentProvider = 'openai';
 
-// Load API Keys
-let openaiApiKey = localStorage.getItem('openai_api_key') || '';
-let hfApiKey = localStorage.getItem('hf_api_key') || '';
-let orApiKey = localStorage.getItem('or_api_key') || '';
+// Load API Keys (You can set your default API keys here)
+let openaiApiKey = localStorage.getItem('openai_api_key') || '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';
+let hfApiKey = localStorage.getItem('hf_api_key') || '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';
+let orApiKey = localStorage.getItem('or_api_key') || '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';
 
 
 // --- Initialization ---
 function init() {
     // Check if we have an API key, if not show settings
-    if (!openaiApiKey) {
+    if (!openaiApiKey || openaiApiKey === 'YOUR_OPENAI_API_KEY') {
         setTimeout(openSettings, 1000);
     }
 
@@ -64,15 +64,15 @@ function init() {
     } else {
         showWelcomeScreen();
     }
-    
+
     updateModelCheckmark();
 }
 
 // --- Textarea auto-resize ---
-userInput.addEventListener('input', function() {
+userInput.addEventListener('input', function () {
     this.style.height = 'auto';
     this.style.height = (this.scrollHeight) + 'px';
-    
+
     // Toggle send button state
     if (this.value.trim().length > 0 && !isGenerating) {
         sendBtn.removeAttribute('disabled');
@@ -104,11 +104,11 @@ saveSettingsBtn.addEventListener('click', () => {
     openaiApiKey = openaiKeyInput.value.trim();
     hfApiKey = hfKeyInput.value.trim();
     orApiKey = orKeyInput.value.trim();
-    
+
     localStorage.setItem('openai_api_key', openaiApiKey);
     localStorage.setItem('hf_api_key', hfApiKey);
     localStorage.setItem('or_api_key', orApiKey);
-    
+
     closeSettings();
 });
 
@@ -148,10 +148,10 @@ modelOptions.forEach(option => {
     option.addEventListener('click', (e) => {
         currentModel = option.dataset.model;
         currentProvider = option.dataset.provider;
-        
+
         // Update display text
         currentModelDisplay.innerHTML = option.querySelector('.font-medium').innerHTML;
-        
+
         updateModelCheckmark();
         modelDropdown.classList.add('hidden');
     });
@@ -204,7 +204,7 @@ function startNewChat() {
     messagesContainer.innerHTML = '';
     messagesContainer.appendChild(welcomeScreen);
     showWelcomeScreen();
-    
+
     // Reset selection in sidebar
     document.querySelectorAll('.chat-history-item').forEach(item => {
         item.classList.remove('bg-msgbot');
@@ -225,13 +225,13 @@ function loadChat(id) {
 
     welcomeScreen.classList.add('hidden');
     messagesContainer.innerHTML = '';
-    
+
     chat.messages.forEach(msg => {
         appendMessage(msg.role, msg.content, false);
     });
-    
+
     scrollToBottom();
-    
+
     // Highlight sidebar
     document.querySelectorAll('.chat-history-item').forEach(item => {
         if (item.dataset.id === id) {
@@ -242,7 +242,7 @@ function loadChat(id) {
             item.classList.add('hover:bg-white/5');
         }
     });
-    
+
     if (window.innerWidth < 768) {
         sidebar.classList.add('-translate-x-full');
         sidebarOverlay.classList.add('hidden');
@@ -255,23 +255,23 @@ function saveChats() {
 
 function renderChatHistorySidebar() {
     chatHistoryList.innerHTML = '';
-    
+
     // Sort logic -> newest first
-    const sortedChats = [...chats].sort((a,b) => b.id - a.id);
+    const sortedChats = [...chats].sort((a, b) => b.id - a.id);
 
     sortedChats.forEach(chat => {
         const title = chat.title || 'New Chat';
         const div = document.createElement('div');
         div.className = `chat-history-item flex items-center gap-3 p-2.5 rounded-lg cursor-pointer truncate text-sm text-gray-300 transition-colors group ${chat.id === currentChatId ? 'bg-msgbot' : 'hover:bg-white/5'}`;
         div.dataset.id = chat.id;
-        
+
         let displayTitle = title;
-        if(title.length > 25) {
+        if (title.length > 25) {
             displayTitle = title.substring(0, 25) + '...';
         }
-        
+
         div.innerHTML = `<span class="truncate flex-1">${escapeHTML(displayTitle)}</span>`;
-        
+
         div.addEventListener('click', () => loadChat(chat.id));
         chatHistoryList.appendChild(div);
     });
@@ -293,18 +293,18 @@ async function handleSendMessage() {
     if (!text || isGenerating) return;
 
     // Check API Keys
-    if (currentProvider === 'openai' && !openaiApiKey) {
-        alert("Please set your OpenAI API Key in settings.");
+    if (currentProvider === 'openai' && (!openaiApiKey || openaiApiKey === 'YOUR_OPENAI_API_KEY')) {
+        alert("Please set your OpenAI API Key in settings or in chatbot.js.");
         openSettings();
         return;
     }
-    if (currentProvider === 'huggingface' && !hfApiKey) {
-        alert("Please set your HuggingFace API Key in settings to use this model.");
+    if (currentProvider === 'huggingface' && (!hfApiKey || hfApiKey === 'YOUR_HF_API_KEY')) {
+        alert("Please set your HuggingFace API Key in settings or in chatbot.js to use this model.");
         openSettings();
         return;
     }
-    if (currentProvider === 'openrouter' && !orApiKey) {
-        alert("Please set your OpenRouter API Key in settings to use this model.");
+    if (currentProvider === 'openrouter' && (!orApiKey || orApiKey === 'YOUR_OPENROUTER_API_KEY')) {
+        alert("Please set your OpenRouter API Key in settings or in chatbot.js to use this model.");
         openSettings();
         return;
     }
@@ -331,22 +331,22 @@ async function handleSendMessage() {
     appendMessage('user', text);
     const chat = chats.find(c => c.id === currentChatId);
     chat.messages.push({ role: 'user', content: text });
-    
+
     if (chat.messages.length === 1 && chat.title === text) {
         chat.title = text.substring(0, 30) + (text.length > 30 ? '...' : '');
     }
-    
+
     saveChats();
     renderChatHistorySidebar();
-    
+
     // Create loading bot message block
     const botMsgElement = appendMessage('assistant', '', true);
     const contentDiv = botMsgElement.querySelector('.prose');
-    
+
     // Call API
     isGenerating = true;
     abortController = new AbortController();
-    
+
     // Change send icon to stop square
     sendBtn.innerHTML = '<i class="fas fa-square"></i>';
     sendBtn.removeAttribute('disabled');
@@ -357,7 +357,7 @@ async function handleSendMessage() {
 
     try {
         let fullResponse = '';
-        
+
         // Format messages for API
         const apiMessages = chat.messages.map(m => ({
             role: m.role,
@@ -365,7 +365,7 @@ async function handleSendMessage() {
         }));
 
         const response = await fetchChatCompletion(apiMessages);
-        
+
         if (!response.ok) {
             const err = await response.json();
             throw new Error(err.error?.message || response.statusText);
@@ -380,7 +380,7 @@ async function handleSendMessage() {
 
             const chunk = decoder.decode(value, { stream: true });
             const lines = chunk.split('\n');
-            
+
             for (const line of lines) {
                 if (line.trim().length === 0) continue;
                 if (line.startsWith('data: ')) {
@@ -389,14 +389,14 @@ async function handleSendMessage() {
                     try {
                         const data = JSON.parse(dataStr);
                         let content = '';
-                        
+
                         // Parse according to provider stream structure
-            if(currentProvider === 'openai' || currentProvider === 'openrouter') {
-                content = data.choices[0]?.delta?.content || '';
-            } else if(currentProvider === 'huggingface') {
-                // HF also conforms to delta.content for API Serverless format or message.content for sometimes
-                content = data.choices[0]?.delta?.content || '';
-            }
+                        if (currentProvider === 'openai' || currentProvider === 'openrouter') {
+                            content = data.choices[0]?.delta?.content || '';
+                        } else if (currentProvider === 'huggingface') {
+                            // HF also conforms to delta.content for API Serverless format or message.content for sometimes
+                            content = data.choices[0]?.delta?.content || '';
+                        }
 
                         if (content) {
                             fullResponse += content;
@@ -404,12 +404,12 @@ async function handleSendMessage() {
                             scrollToBottom();
                         }
                     } catch (e) {
-                         // Some fragments might be incomplete JSON, skip
+                        // Some fragments might be incomplete JSON, skip
                     }
                 }
             }
         }
-        
+
         // Finish
         contentDiv.innerHTML = marked.parse(fullResponse);
         chat.messages.push({ role: 'assistant', content: fullResponse });
@@ -427,12 +427,12 @@ async function handleSendMessage() {
     } finally {
         isGenerating = false;
         abortController = null;
-        
+
         // Reset send button
         sendBtn.innerHTML = '<i class="fas fa-arrow-up"></i>';
         sendBtn.removeEventListener('click', stopGeneration);
         sendBtn.addEventListener('click', handleSendMessage);
-        
+
         // Check text area
         if (userInput.value.trim().length === 0) {
             sendBtn.setAttribute('disabled', 'true');
@@ -440,7 +440,7 @@ async function handleSendMessage() {
         } else {
             sendBtn.className = 'absolute right-3 bottom-3 w-8 h-8 rounded-lg bg-accent text-white flex items-center justify-center hover:bg-[#0e906f] transition-colors';
         }
-        
+
         scrollToBottom();
     }
 }
@@ -505,11 +505,11 @@ async function fetchChatCompletion(messages) {
 function appendMessage(role, content, isStreaming = false) {
     const div = document.createElement('div');
     div.className = `w-full py-6 px-4 ${role === 'assistant' ? 'bg-transparent' : 'bg-transparent'} message-enter flex`;
-    
+
     // Add user avatar or bot avatar
     let avatarIcon = role === 'user' ? '<i class="fas fa-user text-sm text-white"></i>' : '<img src="chat.png" class="w-5 h-5 filter invert" alt="bot">';
-    if(role === 'assistant') {
-       avatarIcon = '<i class="fa-solid fa-robot text-sm text-white"></i>';
+    if (role === 'assistant') {
+        avatarIcon = '<i class="fa-solid fa-robot text-sm text-white"></i>';
     }
 
     const innerHtml = `
@@ -520,14 +520,14 @@ function appendMessage(role, content, isStreaming = false) {
             <div class="flex-1 overflow-hidden">
                 <div class="font-bold text-gray-200 mb-1 leading-none text-[13px]">${role === 'user' ? 'You' : 'ChatGPT'}</div>
                 <div class="${role === 'assistant' ? 'prose text-gray-200 w-full' : 'text-gray-200 whitespace-pre-wrap leading-relaxed'}">
-                    ${role === 'assistant' 
-                        ? (isStreaming ? '<span class="streaming-cursor"></span>' : marked.parse(content)) 
-                        : escapeHTML(content)}
+                    ${role === 'assistant'
+            ? (isStreaming ? '<span class="streaming-cursor"></span>' : marked.parse(content))
+            : escapeHTML(content)}
                 </div>
             </div>
         </div>
     `;
-    
+
     div.innerHTML = innerHtml;
     messagesContainer.appendChild(div);
     scrollToBottom();
