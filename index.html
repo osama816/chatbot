@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChatGPT Clone</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        chatbg: '#212121',
+                        sidebarbg: '#171717',
+                        msgbot: '#2f2f2f',
+                        msguser: '#212121',
+                        accent: '#10a37f'
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-chatbg text-gray-100 flex h-screen overflow-hidden font-sans antialiased text-sm">
+
+    <!-- Sidebar -->
+    <aside id="sidebar" class="w-64 bg-sidebarbg flex flex-col transition-transform duration-300 rounded-r-2xl absolute md:relative z-20 h-full -translate-x-full md:translate-x-0 border-r border-white/10">
+        <div class="p-3">
+            <button id="newChatBtn" class="flex items-center gap-3 w-full p-2.5 rounded-lg hover:bg-white/5 border border-white/20 transition-colors">
+                <i class="fas fa-plus"></i> New chat
+            </button>
+        </div>
+        
+        <div class="flex-1 overflow-y-auto px-3 py-2 space-y-1 scrollbar-hide" id="chatHistoryList">
+            <!-- History items go here -->
+        </div>
+
+        <div class="p-3 border-t border-white/10 space-y-2">
+            <!-- Settings / API Key -->
+            <button id="settingsBtn" class="flex items-center gap-3 w-full p-3 rounded-md hover:bg-white/5 transition-colors text-gray-300">
+                <i class="fas fa-cog"></i> Settings & API Key
+            </button>
+        </div>
+    </aside>
+
+    <!-- Overlay for mobile sidebar -->
+    <div id="sidebarOverlay" class="fixed inset-0 bg-black/50 z-10 hidden md:hidden"></div>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col h-full relative">
+        <!-- Topbar -->
+        <header class="h-14 flex items-center justify-between px-4 border-b border-white/10 bg-chatbg/80 backdrop-blur-sm sticky top-0 z-10">
+            <div class="flex items-center gap-3">
+                <button id="toggleSidebar" class="md:hidden text-gray-300 hover:text-white p-2">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <div class="relative group">
+                    <button id="modelSelectBtn" class="flex items-center gap-2 text-lg font-semibold text-gray-200 hover:text-white p-2 rounded-lg hover:bg-white/5 transition-colors">
+                        <span id="currentModelDisplay">GPT-4o mini</span>
+                        <i class="fas fa-chevron-down text-xs text-gray-400"></i>
+                    </button>
+                    <!-- Dropdown -->
+                    <div id="modelDropdown" class="absolute top-full left-0 mt-1 w-64 bg-[#2f2f2f] border border-white/10 rounded-xl shadow-xl hidden overflow-hidden z-50">
+                        <button class="model-option w-full text-left px-4 py-3 hover:bg-white/5 flex items-center justify-between" data-model="gpt-4o-mini" data-provider="openai">
+                            <div>
+                                <div class="font-medium text-white flex items-center gap-2"><i class="fas fa-bolt text-accent"></i> GPT-4o mini</div>
+                                <div class="text-xs text-gray-400 mt-0.5">Fast, everyday tasks (OpenAI)</div>
+                            </div>
+                            <i class="fas fa-check text-accent hidden"></i>
+                        </button>
+                        <button class="model-option w-full text-left px-4 py-3 hover:bg-white/5 flex items-center justify-between" data-model="meta-llama/Llama-3-8b-chat-hf" data-provider="huggingface">
+                            <div>
+                                <div class="font-medium text-white flex items-center gap-2"><i class="fas fa-cube text-blue-400"></i> Llama 3 8B</div>
+                                <div class="text-xs text-gray-400 mt-0.5">Open source (HuggingFace)</div>
+                            </div>
+                            <i class="fas fa-check text-accent hidden"></i>
+                        </button>
+                        <button class="model-option w-full text-left px-4 py-3 hover:bg-white/5 flex items-center justify-between" data-model="CohereForAI/c4ai-command-r-plus" data-provider="huggingface">
+                            <div>
+                                <div class="font-medium text-white flex items-center gap-2"><i class="fas fa-cube text-blue-400"></i> Command R+</div>
+                                <div class="text-xs text-gray-400 mt-0.5">Open source (HuggingFace)</div>
+                            </div>
+                            <i class="fas fa-check text-accent hidden"></i>
+                        </button>
+                        <button class="model-option w-full text-left px-4 py-3 hover:bg-white/5 flex items-center justify-between" data-model="openai/gpt-4o-mini" data-provider="openrouter">
+                            <div>
+                                <div class="font-medium text-white flex items-center gap-2"><i class="fas fa-route text-purple-400"></i> OpenRouter</div>
+                                <div class="text-xs text-gray-400 mt-0.5">GPT-4o mini via OpenRouter</div>
+                            </div>
+                            <i class="fas fa-check text-accent hidden"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <button id="clearCurrentChat" class="text-sm text-gray-400 hover:text-white" title="Clear Chat">
+               <i class="fa-regular fa-trash-can"></i>
+            </button>
+        </header>
+
+        <!-- Chat Area -->
+        <div id="chatArea" class="flex-1 overflow-y-auto w-full relative scrollbar-hide">
+            <div id="messagesContainer" class="max-w-3xl mx-auto w-full pb-32 pt-8">
+                <!-- Welcome screen -->
+                <div id="welcomeScreen" class="h-full flex flex-col items-center justify-center text-center mt-20 px-4">
+                    <div class="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mb-6 shadow-xl relative overflow-hidden ring-1 ring-white/20">
+                        <i class="fas fa-robot text-3xl text-gray-200"></i>
+                    </div>
+                    <h1 class="text-3xl font-bold mb-2 text-white">How can I help you today?</h1>
+                    <p class="text-gray-400 mb-8 max-w-md">I'm an AI assistant built using OpenAI APIs. I can help you with coding, writing, learning, and more. Make sure to set your API Key in the settings first!</p>
+                </div>
+                
+                <!-- Messages will be injected here -->
+            </div>
+        </div>
+
+        <!-- Input Area -->
+        <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-chatbg via-chatbg to-transparent pt-6">
+            <div class="max-w-3xl mx-auto w-full px-4 pb-6">
+                <!-- Input Box -->
+                <div class="relative bg-msgbot rounded-2xl border border-white/10 shadow-[0_0_15px_rgba(0,0,0,0.2)] focus-within:border-white/30 transition-colors">
+                    <textarea id="userInput" rows="1" placeholder="Message ChatGPT..." 
+                        class="w-full bg-transparent text-white px-4 py-4 pr-12 focus:outline-none resize-none max-h-48 overflow-y-auto rounded-2xl leading-relaxed" 
+                        style="min-height: 56px;"></textarea>
+                    
+                    <button id="sendBtn" class="absolute right-3 bottom-3 w-8 h-8 rounded-lg bg-white text-black flex items-center justify-center hover:bg-gray-200 transition-colors disabled:opacity-30 disabled:hover:bg-white disabled:cursor-not-allowed">
+                        <i class="fas fa-arrow-up"></i>
+                    </button>
+                </div>
+                <div class="text-center text-xs text-gray-500 mt-2">
+                    ChatGPT can make mistakes. Consider verifying important information.
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center hidden opacity-0 transition-opacity duration-200">
+        <div class="bg-[#2f2f2f] w-full max-w-md rounded-2xl border border-white/10 shadow-2xl p-6 transform scale-95 transition-transform duration-200">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-bold text-white flex items-center gap-2"><i class="fas fa-cog text-gray-400"></i> API Settings</h2>
+                <button id="closeSettingsBtn" class="text-gray-400 hover:text-white transition-colors">
+                    <i class="fas fa-times text-lg"></i>
+                </button>
+            </div>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-1">OpenAI API Key</label>
+                    <input type="password" id="openaiKeyInput" placeholder="sk-..." class="w-full bg-chatbg border border-white/10 rounded-lg px-3 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all">
+                    <p class="text-xs text-gray-500 mt-1">Stored locally in your browser. Used for GPT-4o-mini.</p>
+                </div>
+                
+                <div class="bg-white/5 h-px w-full my-4"></div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-1">HuggingFace API Key (Optional)</label>
+                    <input type="password" id="hfKeyInput" placeholder="hf_..." class="w-full bg-chatbg border border-white/10 rounded-lg px-3 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all">
+                    <p class="text-xs text-gray-500 mt-1">Needed for querying open-source models via HuggingFace Inference Endpoints.</p>
+                </div>
+
+                <div class="bg-white/5 h-px w-full my-4"></div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-1">OpenRouter API Key</label>
+                    <input type="password" id="orKeyInput" placeholder="sk-or-v1-..." class="w-full bg-chatbg border border-white/10 rounded-lg px-3 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all">
+                    <p class="text-xs text-gray-500 mt-1">Used for OpenRouter models.</p>
+                </div>
+            </div>
+            
+            <div class="mt-6 flex justify-end gap-3">
+                <button id="cancelSettingsBtn" class="px-4 py-2 rounded-lg text-gray-300 hover:bg-white/5 transition-colors">Cancel</button>
+                <button id="saveSettingsBtn" class="px-4 py-2 bg-accent hover:bg-[#0e906f] text-white rounded-lg transition-colors font-medium">Save Keys</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="chatbot.js"></script>
+</body>
+</html>

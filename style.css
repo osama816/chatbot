@@ -1,0 +1,134 @@
+/* Scrollbar Styling */
+.scrollbar-hide::-webkit-scrollbar {
+    display: none;
+}
+.scrollbar-hide {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+}
+
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+/* Base styles */
+body {
+    scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+}
+
+/* Markdown Rendering Styles */
+.prose {
+    color: #ececf1;
+    line-height: 1.6;
+    font-size: 14px;
+}
+
+.prose p {
+    margin-bottom: 1em;
+}
+
+.prose p:last-child {
+    margin-bottom: 0;
+}
+
+.prose pre {
+    background-color: #0d0d0d;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    overflow-x: auto;
+    margin: 1rem 0;
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+.prose code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    font-size: 0.85em;
+    background-color: rgba(255, 255, 255, 0.1);
+    padding: 0.2em 0.4em;
+    border-radius: 0.25rem;
+}
+
+.prose pre code {
+    background-color: transparent;
+    padding: 0;
+    border-radius: 0;
+    color: #e2e8f0;
+}
+
+.prose ul {
+    list-style-type: disc;
+    padding-left: 1.5rem;
+    margin-bottom: 1em;
+}
+
+.prose ol {
+    list-style-type: decimal;
+    padding-left: 1.5rem;
+    margin-bottom: 1em;
+}
+
+.prose h1, .prose h2, .prose h3, .prose h4 {
+    font-weight: 600;
+    margin-top: 1.5em;
+    margin-bottom: 0.5em;
+}
+
+.prose h1 { font-size: 1.5em; }
+.prose h2 { font-size: 1.25em; }
+.prose h3 { font-size: 1.1em; }
+
+.prose blockquote {
+    border-left: 3px solid #10a37f;
+    padding-left: 1rem;
+    color: #a1a1aa;
+    margin: 1rem 0;
+}
+
+.prose a {
+    color: #10a37f;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+/* Blinking cursor for typing effect */
+.streaming-cursor {
+    display: inline-block;
+    width: 6px;
+    height: 16px;
+    background-color: currentColor;
+    vertical-align: middle;
+    margin-left: 2px;
+    animation: blink 1s step-end infinite;
+}
+
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+}
+
+/* Message entry animation */
+.message-enter {
+    animation: slideUp 0.3s ease-out forwards;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
